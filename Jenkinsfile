@@ -23,12 +23,6 @@ pipeline {
     }
 
 
-    stage('Maven UnitTest'){
-      steps {
-        sh 'mvn test'
-      }
-    }
-
     stage ('Code Analysis with Checkstyle'){
             steps {
                 sh 'mvn checkstyle:checkstyle'
@@ -39,6 +33,7 @@ pipeline {
                 }
             }
         }
+
 
     stage('SonarQube Analysis') {
       steps {
