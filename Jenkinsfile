@@ -69,6 +69,7 @@ pipeline {
   post {
         always {
             // Run the Docker image cleanup script
+            sh '''
             #!/bin/bash
             image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
 
@@ -107,7 +108,7 @@ pipeline {
                 done
             fi
 
-
+            '''
 
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
