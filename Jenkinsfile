@@ -72,7 +72,7 @@ pipeline {
             sh '''
             #!/bin/bash
             image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
-            image_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$image_name" | awk -F ":" '{print $2}')
+            image_tags=$(docker images --format "{.Repository}:{.Tag}" | grep "$image_name" | awk -F ":" '{print $2}')
 
             if [ -z "$image_tags" ]; then
                 echo "No matching images found."
