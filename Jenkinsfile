@@ -71,38 +71,26 @@ pipeline {
             // Run the Docker image cleanup script
             sh '''
             #!/bin/bash
-            image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
-            image_tags=$(docker images --format "{.Repository}:{.Tag}" | grep "$image_name" | awk -F ":" '{print $2}')
 
-            if [ -z "$image_tags" ]; then
-                echo "No matching images found."
-            else
-                for tag in $image_tags; do
-                    if [ "$tag" == "latest" ]; then
-                        echo "Keeping image: $image_name:$tag"
-                    else
-                        if [[ $tag == *","* ]]; then
-                            IFS=',' read -ra tags_array <<< "$tag"
-                            for sub_tag in "${tags_array[@]}"; do
-                                sub_tag=$(echo "$sub_tag" | tr -d '[:space:]')
-                                docker rmi -f "$image_name:$sub_tag"
-                                if [ $? -eq 0 ]; then
-                                    echo "Removed image: $image_name:$sub_tag"
-                                else
-                                    echo "Failed to remove image: $image_name:$sub_tag"
-                                fi
-                            done
-                        else
-                            docker rmi -f "$image_name:$tag"
-                            if [ $? -eq 0 ]; then
-                                echo "Removed image: $image_name:$tag"
-                            else
-                                echo "Failed to remove image: $image_name:$tag"
-                            fi
-                        fi
-                    fi
-                done
-            fi
+            # Define the repository URL
+            REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
+
+            # Get a list of all images from the repository
+            ALL_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "^$REPO_URL")
+
+            # Iterate over each image
+            for IMAGE in $ALL_IMAGES; do
+              IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
+              IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
+
+              # Check if the tag is not 'latest'
+              if [ "$IMAGE_TAG" != "latest" ]; then
+                echo "Removing image: $IMAGE"
+                docker rmi "$IMAGE_NAME:$IMAGE_TAG"
+              fi
+            done
+
+            echo "Cleanup completed."
 
             '''
 
