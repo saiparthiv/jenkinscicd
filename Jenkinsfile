@@ -18,7 +18,7 @@ pipeline {
   stages {
     stage('Fetch Code'){
       steps {
-        git branch: 'master', url: 'https://github.com/saiparthiv/User-Control-Panel.git'
+        git branch: 'master', url: 'https://github.com/saiparthiv/jenkinscicd.git'
       }
     }
 
@@ -85,6 +85,8 @@ pipeline {
   }
   post {
         always {
+            // Clean up - remove the Docker image
+            sh "docker rmi my-static-website:latest"
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
                 color: COLOR_MAP[currentBuild.currentResult],
