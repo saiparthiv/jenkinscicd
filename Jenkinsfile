@@ -69,16 +69,32 @@ pipeline {
   post {
         always {
             // Run the Docker image cleanup script
-            sh '''
-                #!/bin/bash
-                image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
-                image_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$image_name" | awk -F ":" '{print $2}')
-                if [ -z "$image_tags" ]; then
-                    echo "No matching images found."
-                else
-                    for tag in $image_tags; do
-                        if [ "$tag" == "latest" ]; then
-                            echo "Keeping image: $image_name:$tag"
+            #!/bin/bash
+            image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
+
+            // Get all tags for the image
+            image_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$image_name" | awk -F ":" '{print $2}')
+
+            if [ -z "$image_tags" ]; then
+                echo "No matching images found."
+            else
+                for tag in $image_tags; do
+                    if [ "$tag" == "latest" ]; then
+                        echo "Keeping image: $image_name:$tag"
+                    else
+                        // Check if the tag contains a comma (,)
+                        if [[ $tag == *","* ]]; then
+                            // Split the tag on the comma and remove any leading/trailing whitespace
+                            IFS=',' read -ra tags_array <<< "$tag"
+                            for sub_tag in "${tags_array[@]}"; do
+                                sub_tag=$(echo "$sub_tag" | tr -d '[:space:]')
+                                docker rmi -f "$image_name:$sub_tag"
+                                if [ $? -eq 0 ]; then
+                                    echo "Removed image: $image_name:$sub_tag"
+                                else
+                                    echo "Failed to remove image: $image_name:$sub_tag"
+                                fi
+                            done
                         else
                             docker rmi -f "$image_name:$tag"
                             if [ $? -eq 0 ]; then
@@ -87,9 +103,11 @@ pipeline {
                                 echo "Failed to remove image: $image_name:$tag"
                             fi
                         fi
-                    done
-                fi
-            '''
+                    fi
+                done
+            fi
+
+
 
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
