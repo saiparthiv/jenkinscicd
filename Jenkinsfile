@@ -72,8 +72,6 @@ pipeline {
             sh '''
             #!/bin/bash
             image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
-
-            // Get all tags for the image
             image_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$image_name" | awk -F ":" '{print $2}')
 
             if [ -z "$image_tags" ]; then
@@ -83,9 +81,7 @@ pipeline {
                     if [ "$tag" == "latest" ]; then
                         echo "Keeping image: $image_name:$tag"
                     else
-                        // Check if the tag contains a comma (,)
                         if [[ $tag == *","* ]]; then
-                            // Split the tag on the comma and remove any leading/trailing whitespace
                             IFS=',' read -ra tags_array <<< "$tag"
                             for sub_tag in "${tags_array[@]}"; do
                                 sub_tag=$(echo "$sub_tag" | tr -d '[:space:]')
