@@ -68,26 +68,29 @@ pipeline {
   }
   post {
         always {
-            // Clean up - remove the Docker image
-            // sh "docker rmi 805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd:latest"
             // Run the Docker image cleanup script
-                sh '''
-                    #!/bin/bash
-                    image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
-                    image_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$image_name" | awk -F ":" '{print $2}')
-                    if [ -z "$image_tags" ]; then
-                        echo "No matching images found."
-                    else
-                        for tag in $image_tags; do
+            sh '''
+                #!/bin/bash
+                image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
+                image_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "$image_name" | awk -F ":" '{print $2}')
+                if [ -z "$image_tags" ]; then
+                    echo "No matching images found."
+                else
+                    for tag in $image_tags; do
+                        if [ "$tag" == "latest" ]; then
+                            echo "Keeping image: $image_name:$tag"
+                        else
                             docker rmi -f "$image_name:$tag"
                             if [ $? -eq 0 ]; then
                                 echo "Removed image: $image_name:$tag"
                             else
                                 echo "Failed to remove image: $image_name:$tag"
                             fi
-                        done
-                    fi
-                '''
+                        fi
+                    done
+                fi
+            '''
+
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
                 color: COLOR_MAP[currentBuild.currentResult],
