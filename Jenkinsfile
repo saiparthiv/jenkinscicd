@@ -23,18 +23,6 @@ pipeline {
     }
 
 
-    stage ('Code Analysis with Checkstyle'){
-            steps {
-                sh 'mvn checkstyle:checkstyle'
-            }
-            post {
-                success {
-                    echo 'Generated Analysis Result'
-                }
-            }
-        }
-
-
     stage('SonarQube Analysis') {
       steps {
         script {
