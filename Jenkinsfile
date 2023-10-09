@@ -65,6 +65,28 @@ pipeline {
           }
     }
 
+    stage('Deploy to EC2') {
+        steps {
+            script {
+                // Define the ECR image details
+                def ecrRegion = 'us-east-1'
+                def ecrAccountId = '805619463928'
+                def ecrRepository = 'jenkinscicd'
+                def ecrImageTag = 'latest'
+
+                // Authenticate Docker with AWS ECR
+                def dockerAuth = sh(script: "aws ecr get-login-password --region ${ecrRegion}", returnStdout: true).trim()
+                sh "echo ${dockerAuth} | docker login --username AWS --password-stdin ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
+
+                // Pull the ECR image
+                sh "docker pull ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
+
+                // Run the Docker container
+                sh "docker run -d -p 85:80 ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
+            }
+        }
+    }
+
   }
   post {
         always {
