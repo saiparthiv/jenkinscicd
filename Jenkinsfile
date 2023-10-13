@@ -97,7 +97,7 @@ pipeline {
             // Run the Docker image cleanup script
             sh '''
             #!/bin/bash
-
+            
             # Define the repository URL
             REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
 
@@ -109,14 +109,15 @@ pipeline {
               IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
               IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
 
-              # Check if the tag is not 'latest'
-              if [ "$IMAGE_TAG" != "latest" ]; then
+              # Check if the tag is not 'latest' and not '<none>'
+              if [ "$IMAGE_TAG" != "latest" ] && [ "$IMAGE_TAG" != "<none>" ]; then
                 echo "Removing image: $IMAGE"
                 docker rmi "$IMAGE_NAME:$IMAGE_TAG"
               fi
             done
 
             echo "Cleanup completed."
+
 
             '''
 
