@@ -67,6 +67,7 @@ pipeline {
           }
     }
 
+
     stage('Deploy to EC2') {
         steps {
             script {
@@ -81,17 +82,16 @@ pipeline {
                     // Retrieve the AWS credentials
                     def awsCredentials = credentials('AWS_Credentials')
 
-                    // Use the credentials to log in to Docker
-                    sh "docker login -u AWS -p ${awsCredentials.secret} https://${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
+                    // Log in to Docker registry
+                    sh "aws ecr get-login-password --region ${ecrRegion} | docker login --username AWS --password-stdin ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
+
+                    // Pull the ECR image
+                    sh "docker pull ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
+
+                    // Run the Docker container on the host machine (Ubuntu)
+                    sh "docker run -d -p 85:80 ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
                 }
-
-                // Pull the ECR image
-                sh "docker pull ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
-
-                // Run the Docker container
-                sh "docker run -d -p 85:80 ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
             }
-
         }
     }
 
@@ -102,7 +102,7 @@ pipeline {
             // Run the Docker image cleanup script
             sh '''
             #!/bin/bash
-            
+
             # Define the repository URL
             REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
 
@@ -122,6 +122,7 @@ pipeline {
             done
 
             echo "Cleanup completed."
+
 
 
             '''
