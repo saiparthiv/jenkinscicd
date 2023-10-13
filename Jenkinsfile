@@ -13,6 +13,8 @@ pipeline {
         registryCredential = 'ecr:us-east-1:awscreds'
         appRegistry = "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
         jenkinscicdRegistry = "https://805619463928.dkr.ecr.us-east-1.amazonaws.com"
+        cluster = "clustername"
+        service = "servicename"
     }
 
   stages {
@@ -74,9 +76,10 @@ pipeline {
                 def ecrRepository = 'jenkinscicd'
                 def ecrImageTag = 'latest'
 
-                // Authenticate Docker with AWS ECR
-                def dockerAuth = sh(script: "aws ecr get-login-password --region ${ecrRegion}", returnStdout: true).trim()
-                sh "echo ${dockerAuth} | docker login --username AWS --password-stdin ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
+                // Authenticate Docker with AWS ECR using Jenkins credentials
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_Credentials']]) {
+                    sh "docker login -u AWS -p $AWS_SECRET_ACCESS_KEY -e none https://${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
+                }
 
                 // Pull the ECR image
                 sh "docker pull ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
@@ -86,6 +89,7 @@ pipeline {
             }
         }
     }
+
 
   }
   post {
