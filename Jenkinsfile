@@ -74,7 +74,7 @@ pipeline {
           // Set the AWS credentials and region for Terraform
           withAWS(credentials: 'awscreds', region: 'us-east-1') {
             // Define the path to your Terraform script
-            def terraformScriptPath = "${WORKSPACE}/Entire CICD Pipeline"
+            def terraformScriptPath = "${WORKSPACE}"
 
             // Initialize and apply the Terraform configuration
             sh "cd ${terraformScriptPath} && terraform init"
