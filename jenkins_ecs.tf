@@ -72,7 +72,6 @@ resource "aws_ecs_service" "jenkinscicd_service" {
 data "aws_ecr_image" "jenkinscicd_image" {
   repository_name = "jenkinscicd"
   image_digest = "latest"
-  repository_name = "jenkinscicd"
 }
 
 # ECR Repository
