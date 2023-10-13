@@ -77,7 +77,7 @@ pipeline {
                 def ecrImageTag = 'latest'
 
                 // Authenticate Docker with AWS ECR using Jenkins credentials
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'AWS_Credentials']]) {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'awscreds']]) {
                     sh "docker login -u AWS -p $AWS_SECRET_ACCESS_KEY -e none https://${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
                 }
 
