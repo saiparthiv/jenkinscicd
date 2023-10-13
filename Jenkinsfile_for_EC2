@@ -1,3 +1,5 @@
+// This Jenkinsfile will build image using docker, upload it to ECR and deploy to EC2 host
+
 def COLOR_MAP = [
     'SUCCESS': 'good', 
     'FAILURE': 'danger',
@@ -68,30 +70,32 @@ pipeline {
     }
 
 
-    stage('Deploy to ECS with Terraform') {
-      steps {
-        script {
-          // Set the AWS credentials and region for Terraform
-          withAWS(credentials: 'awscreds', region: 'us-east-1') {
-            // Define the path to your Terraform script
-            def terraformScriptPath = "jenkinscicd"
+    stage('Deploy to EC2') {
+        steps {
+            script {
+                // Define the ECR image details
+                def ecrRegion = 'us-east-1'
+                def ecrAccountId = '805619463928'
+                def ecrRepository = 'jenkinscicd'
+                def ecrImageTag = 'latest'
 
-            // Initialize and apply the Terraform configuration
-            sh "cd ${terraformScriptPath} && terraform init"
-            sh "cd ${terraformScriptPath} && terraform apply -auto-approve"
+                // Authenticate Docker with AWS ECR using Jenkins credentials
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'awscreds']]) {
+                    // Retrieve the AWS credentials
+                    def awsCredentials = credentials('AWS_Credentials')
 
-            // Optionally, capture and save the Terraform outputs for reference
-            def ecsClusterId = sh(script: "cd ${terraformScriptPath} && terraform output ecs_cluster_id", returnStatus: true).trim()
-            def ecsServiceName = sh(script: "cd ${terraformScriptPath} && terraform output ecs_service_name", returnStatus: true).trim()
+                    // Log in to Docker registry
+                    sh "aws ecr get-login-password --region ${ecrRegion} | docker login --username AWS --password-stdin ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com"
 
-            // Print the ECS cluster and service details
-            echo "ECS Cluster ID: ${ecsClusterId}"
-            echo "ECS Service Name: ${ecsServiceName}"
-          }
+                    // Pull the ECR image
+                    sh "docker pull ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
+
+                    // Run the Docker container on the host machine (Ubuntu)
+                    sh "docker run -d -p 85:80 ${ecrAccountId}.dkr.ecr.${ecrRegion}.amazonaws.com/${ecrRepository}:${ecrImageTag}"
+                }
+            }
         }
-      }
     }
-
 
 
   }
