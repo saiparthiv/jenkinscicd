@@ -23,7 +23,6 @@ resource "aws_ecs_task_definition" "jenkinscicd_task" {
     {
       "name": "jenkinscicd-app",
       "image": "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd:${data.aws_ecr_image.jenkinscicd_image.image_digest}",
-      "cpu": 256,
       "memory": 512,
       "essential": true,
       "portMappings": [
