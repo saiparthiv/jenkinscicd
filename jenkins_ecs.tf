@@ -9,6 +9,7 @@ resource "aws_ecs_cluster" "jenkinscicd_cluster" {
 resource "aws_ecs_task_definition" "my_task" {
   family = "my-task"
   network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
 
   cpu = "256"
   memory = "512"  
