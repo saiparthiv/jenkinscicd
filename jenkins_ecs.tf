@@ -29,7 +29,7 @@ resource "aws_ecs_task_definition" "jenkinscicd_task" {
       "portMappings": [
         {
           "containerPort": 80,
-          "hostPort": 80
+          "hostPort": 85
         }
       ]
     }
