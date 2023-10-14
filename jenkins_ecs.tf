@@ -28,8 +28,8 @@ resource "aws_ecs_task_definition" "jenkinscicd_task" {
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 80,
-          "hostPort": 80
+          "containerPort": 85,
+          "hostPort": 85
         }
       ]
     }
@@ -94,13 +94,46 @@ resource "aws_subnet" "example" {
   map_public_ip_on_launch = true
 }
 
-data "aws_ecs_service" "jenkinscicd_service" {
-  name = "jenkinscicd-service" # Replace with your ECS service name
-  cluster = aws_ecs_cluster.jenkinscicd_cluster.id
+# Create an Application Load Balancer
+resource "aws_lb" "web" {
+  name               = "my-web-lb"
+  internal           = false
+  load_balancer_type = "application"
+  
+  # Use the created subnets
+  subnets = aws_subnet.example[*].id
+  
+  enable_deletion_protection = false
 }
 
-output "ecs_service_url" {
-  value = aws_ecs_service.jenkinscicd_service.network_configuration[0].subnets[0] # Use the correct attribute for your setup
+# Create an ALB listener
+resource "aws_lb_listener" "web" {
+  load_balancer_arn = aws_lb.web.arn
+  port = 80
+  protocol = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      status_code  = "200"
+    }
+  }
+}
+
+# Create a Target Group
+resource "aws_lb_target_group" "jenkinscicd_target_group" {
+  name     = "jenkinscicd-target-group"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "vpc-08e4f792b45a68d24" # Use your VPC ID
+  health_check {
+    path                = "/" # Replace with an appropriate health check path
+    interval            = 30
+    timeout             = 10
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
 }
 
 
