@@ -77,13 +77,32 @@ data "aws_ecr_image" "jenkinscicd_image" {
 }
 
 
+# Define the list of Availability Zones where you want to create subnets
+variable "availability_zones" {
+  type    = list(string)
+  default = ["us-east-1a", "us-east-1b", "us-east-1c"]
+}
+
+# Create subnets in different Availability Zones
+resource "aws_subnet" "example" {
+  count = length(var.availability_zones)
+  
+  vpc_id                  = "vpc-08e4f792b45a68d24"
+  availability_zone       = var.availability_zones[count.index]
+  cidr_block              = "10.0.${count.index}.0/24"  # Customize the CIDR block range
+  map_public_ip_on_launch = true
+}
+
 # Create an Application Load Balancer
 resource "aws_lb" "web" {
-  name = "my-web-lb"
-  internal = false
+  name               = "my-web-lb"
+  internal           = false
   load_balancer_type = "application"
-  subnets = ["subnet-0c80f601a78574913"]  # Replace with your public subnet IDs
-  enable_deletion_protection = false  # Set to true if you want deletion protection
+  
+  # Use the created subnets
+  subnets = aws_subnet.example[*].id
+  
+  enable_deletion_protection = false
 }
 
 # Create an ALB listener
@@ -100,6 +119,7 @@ resource "aws_lb_listener" "web" {
     }
   }
 }
+
 
 
 # IAM Policy for ECS Execution Role
