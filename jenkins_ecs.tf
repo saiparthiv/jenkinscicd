@@ -67,6 +67,7 @@ resource "aws_ecs_service" "jenkinscicd_service" {
     subnets = ["subnet-0c80f601a78574913"] # Replace with your subnet IDs
     security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
   }
+  desired_count = 1
   depends_on = [aws_ecs_cluster.jenkinscicd_cluster]
 }
 
