@@ -94,12 +94,13 @@ resource "aws_subnet" "example" {
   map_public_ip_on_launch = true
 }
 
-data "aws_ecs_task_definition" "jenkinscicd_task" {
-  task_definition = aws_ecs_task_definition.jenkinscicd_task.family
+data "aws_ecs_service" "jenkinscicd_service" {
+  name = "jenkinscicd-service" # Replace with your ECS service name
+  cluster = aws_ecs_cluster.jenkinscicd_cluster.id
 }
 
 output "ecs_service_url" {
-  value = data.aws_ecs_task_definition.jenkinscicd_task.network_mode[0].awsvpc_configuration[0].subnets[0]
+  value = aws_ecs_service.jenkinscicd_service.network_configuration[0].subnets[0] # Use the correct attribute for your setup
 }
 
 
