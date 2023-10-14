@@ -89,7 +89,7 @@ resource "aws_subnet" "example" {
   
   vpc_id                  = "vpc-08e4f792b45a68d24"
   availability_zone       = var.availability_zones[count.index]
-  cidr_block              = "10.0.${count.index}.0/16"  # Customize the CIDR block range
+  cidr_block              = "172.31.${count.index}.0/24"  # Customize the CIDR block range
   map_public_ip_on_launch = true
 }
 
