@@ -139,7 +139,7 @@ resource "aws_lb_target_group" "jenkinscicd_target_group" {
 # Associate your Fargate service with the ALB's target group
 resource "aws_lb_target_group_attachment" "jenkinscicd_task_attachment" {
   target_group_arn = aws_lb_target_group.jenkinscicd_target_group.arn
-  target_id        = aws_ecs_task_definition.jenkinscicd_task.arn
+  target_id        = "arn:aws:ecs:us-east-1:805619463928:task/jenkinscicd-cluster/95658dd4f238471083f89ae7f99b4b4d"
   port             = 80
 }
 
