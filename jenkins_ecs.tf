@@ -77,6 +77,32 @@ data "aws_ecr_image" "jenkinscicd_image" {
 }
 
 
+# Create an Application Load Balancer
+resource "aws_lb" "web" {
+  name = "my-web-lb"
+  internal = false
+  load_balancer_type = "application"
+  subnets = ["subnet-0c80f601a78574913"]  # Replace with your public subnet IDs
+  enable_deletion_protection = false  # Set to true if you want deletion protection
+}
+
+# Create an ALB listener
+resource "aws_lb_listener" "web" {
+  load_balancer_arn = aws_lb.web.arn
+  port = 80
+  protocol = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      status_code  = "200"
+      content      = "Hello from the ALB!"
+    }
+  }
+}
+
+
 # IAM Policy for ECS Execution Role
 resource "aws_iam_policy" "ecs_execution_policy" {
   name = "jenkinscicd-ecs-execution-policy"
