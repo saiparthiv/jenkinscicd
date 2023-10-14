@@ -16,6 +16,8 @@ resource "aws_ecs_task_definition" "jenkinscicd_task" {
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
 
+  cpu = "256"
+
   container_definitions = <<DEFINITION
   [
     {
@@ -74,10 +76,6 @@ data "aws_ecr_image" "jenkinscicd_image" {
   image_tag = "latest"
 }
 
-# ECR Repository
-resource "aws_ecr_repository" "jenkinscicd_repository" {
-  name = "jenkinscicd"
-}
 
 # IAM Policy for ECS Execution Role
 resource "aws_iam_policy" "ecs_execution_policy" {
