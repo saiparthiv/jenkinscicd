@@ -81,8 +81,8 @@ pipeline {
             sh "cd ${terraformScriptPath} && terraform apply -auto-approve"
 
             // Optionally, capture and save the Terraform outputs for reference
-            def ecsClusterId = sh(script: "cd ${terraformScriptPath} && terraform output ecs_cluster_id", returnStatus: true).trim()
-            def ecsServiceName = sh(script: "cd ${terraformScriptPath} && terraform output ecs_service_name", returnStatus: true).trim()
+            def ecsClusterId = sh(script: "cd ${terraformScriptPath} && terraform output ecs_cluster_id", returnStatus: true)
+            def ecsServiceName = sh(script: "cd ${terraformScriptPath} && terraform output ecs_service_name", returnStatus: true)
 
             // Print the ECS cluster and service details
             echo "ECS Cluster ID: ${ecsClusterId}"
