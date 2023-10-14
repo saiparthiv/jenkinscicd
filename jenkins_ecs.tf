@@ -97,7 +97,6 @@ resource "aws_lb_listener" "web" {
     fixed_response {
       content_type = "text/plain"
       status_code  = "200"
-      content      = "Hello from the ALB!"
     }
   }
 }
