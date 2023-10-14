@@ -13,8 +13,6 @@ pipeline {
         registryCredential = 'ecr:us-east-1:awscreds'
         appRegistry = "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
         jenkinscicdRegistry = "https://805619463928.dkr.ecr.us-east-1.amazonaws.com"
-        cluster = "clustername"
-        service = "servicename"
     }
 
   stages {
@@ -105,24 +103,24 @@ pipeline {
             REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
 
             # Get a list of all images from the repository
-            ALL_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "^$REPO_URL")
+            ALL_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "^$REPO_URL")
 
             # Iterate over each image
             for IMAGE in $ALL_IMAGES; do
-              IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
-              IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
+              IMAGE_NAME_TAG=$(echo "$IMAGE" | cut -d ' ' -f 1)
+              IMAGE_ID=$(echo "$IMAGE" | cut -d ' ' -f 2)
 
-              # Check if the tag is not 'latest' and not '<none>'
-              if [ "$IMAGE_TAG" != "latest" ] && [ "$IMAGE_TAG" != "<none>" ]; then
-                echo "Removing image: $IMAGE"
-                docker rmi "$IMAGE_NAME:$IMAGE_TAG"
+              # Get the image tag
+              IMAGE_TAG=$(docker inspect --format='{{.Config.Image}}' "$IMAGE_ID" | cut -d ':' -f 2)
+
+              # Check if the tag is not 'latest' or is empty
+              if [ -z "$IMAGE_TAG" ] || [ "$IMAGE_TAG" != "latest" ]; then
+                echo "Removing image: $IMAGE_NAME_TAG"
+                docker rmi "$IMAGE_NAME_TAG"
               fi
             done
 
             echo "Cleanup completed."
-
-
-
             '''
 
             echo 'Slack Notifications.'
