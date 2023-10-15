@@ -63,7 +63,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_alb" "jenkinscicd_alb" {
   name = "jenkinscicd-alb"
-  subnets = ["subnet-011a25a8ff709d9fe"] # Replace with your subnet IDs
+  subnets = ["subnet-011a25a8ff709d9fe", "subnet-073a0165c5c39bdd1"] # Replace with your subnet IDs
   security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
 }
 
