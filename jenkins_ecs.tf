@@ -88,8 +88,7 @@ resource "aws_alb_listener_rule" "jenkinscicd_listener_rule" {
   listener_arn = aws_alb_listener.jenkinscicd_listener.arn
   priority = 1
   condition {
-    field = "path-pattern"
-    values = ["/*"]
+    path_pattern = "/"
   }
   action {
     type = "forward"
