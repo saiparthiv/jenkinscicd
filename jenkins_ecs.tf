@@ -63,8 +63,9 @@ resource "aws_vpc" "main" {
 
 resource "aws_alb" "jenkinscicd_alb" {
   name = "jenkinscicd-alb"
-  subnets = ["subnet-011a25a8ff709d9fe", "subnet-06c278b995be497b0"] # Replace with your subnet IDs
+  subnets = ["subnet-03899ca854bdc5261", "subnet-08dd2327ec620088b"] # Replace with your subnet IDs
   security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_alb_target_group" "jenkinscicd_target_group" {
@@ -105,7 +106,7 @@ resource "aws_ecs_service" "jenkinscicd_service" {
   task_definition = aws_ecs_task_definition.jenkinscicd_task.arn
   launch_type     = "FARGATE"
   network_configuration {
-    subnets = ["subnet-011a25a8ff709d9fe"] # Replace with your subnet IDs
+    subnets = ["subnet-03899ca854bdc5261"] # Replace with your subnet IDs
     security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
   }
   desired_count = 1
