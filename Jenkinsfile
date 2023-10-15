@@ -1,7 +1,3 @@
-def COLOR_MAP = [
-    'SUCCESS': 'good', 
-    'FAILURE': 'danger',
-]
 pipeline {
     agent any
     tools {
@@ -97,36 +93,26 @@ pipeline {
         always {
             // Run the Docker image cleanup script
             sh '''
-            #!/bin/bash
+                #!/bin/bash
 
-            # Define the repository URL
-            REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
+                # Get all image tags for the repository
+                tags=$(docker images | grep -v 'latest' | awk '{print $1}')
 
-            # Get a list of all images from the repository
-            ALL_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep "^$REPO_URL")
+                # Loop through all tags and remove the image
+                for tag in $tags; do
+                  if [[ "$tag" == "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd" ]]; then
+                    docker rmi "$tag"
+                  fi
+                done
 
-            # Iterate over each image
-            for IMAGE in $ALL_IMAGES; do
-              IMAGE_NAME_TAG=$(echo "$IMAGE" | cut -d ' ' -f 1)
-              IMAGE_ID=$(echo "$IMAGE" | cut -d ' ' -f 2)
-
-              # Get the image tag
-              IMAGE_TAG=$(docker inspect --format='{{.Config.Image}}' "$IMAGE_ID" | cut -d ':' -f 2)
-
-              # Check if the tag is not 'latest' or is empty
-              if [ -z "$IMAGE_TAG" ] || [ "$IMAGE_TAG" != "latest" ]; then
-                echo "Removing image: $IMAGE_NAME_TAG"
-                docker rmi "$IMAGE_NAME_TAG"
-              fi
-            done
-
-            echo "Cleanup completed."
             '''
+            //Send a Slack Notification
+            slackSend(
+                  channel: '#jenkinscicd',
+                  color: currentBuild.result == 'SUCCESS' ? '#008000' : '#FF0000',
+                  message: "Build ${currentBuild.fullName} ${currentBuild.result}"
+            )
 
-            echo 'Slack Notifications.'
-            slackSend channel: '#jenkinscicd',
-                color: COLOR_MAP[currentBuild.currentResult],
-                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
         }
     }
 }
