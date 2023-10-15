@@ -57,6 +57,42 @@ resource "aws_iam_role" "ecs_execution_role" {
 EOF
 }
 
+resource "aws_alb" "jenkinscicd_alb" {
+  name = "jenkinscicd-alb"
+  subnets = ["subnet-011a25a8ff709d9fe"] # Replace with your subnet IDs
+  security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
+}
+
+resource "aws_alb_target_group" "jenkinscicd_target_group" {
+  name = "jenkinscicd-target-group"
+  port = 85
+  protocol = "HTTP"
+  vpc_id = aws_vpc.main.id
+}
+
+resource "aws_alb_listener" "jenkinscicd_listener" {
+  load_balancer_arn = aws_alb.jenkinscicd_alb.arn
+  port = 80
+  protocol = "HTTP"
+  default_action {
+    type = "forward"
+    target_group_arn = aws_alb_target_group.jenkinscicd_target_group.arn
+  }
+}
+
+resource "aws_alb_listener_rule" "jenkinscicd_listener_rule" {
+  listener_arn = aws_alb_listener.jenkinscicd_listener.arn
+  priority = 1
+  condition {
+    field = "path-pattern"
+    values = ["/*"]
+  }
+  action {
+    type = "forward"
+    target_group_arn = aws_alb_target_group.jenkinscicd_target_group.arn
+  }
+}
+
 # ECS Service
 resource "aws_ecs_service" "jenkinscicd_service" {
   name            = "jenkinscicd-service"
@@ -64,7 +100,7 @@ resource "aws_ecs_service" "jenkinscicd_service" {
   task_definition = aws_ecs_task_definition.jenkinscicd_task.arn
   launch_type     = "FARGATE"
   network_configuration {
-    subnets = ["subnet-0c80f601a78574913"] # Replace with your subnet IDs
+    subnets = ["subnet-011a25a8ff709d9fe"] # Replace with your subnet IDs
     security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
   }
   desired_count = 1
@@ -118,4 +154,9 @@ output "ecs_cluster_id" {
 
 output "ecs_service_name" {
   value = aws_ecs_service.jenkinscicd_service.name
+}
+
+# Output the Load Balancer URL
+output "jenkinscicd_load_balancer_url" {
+  value = aws_alb.jenkinscicd_alb.dns_name
 }
