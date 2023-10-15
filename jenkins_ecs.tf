@@ -65,7 +65,6 @@ resource "aws_alb" "jenkinscicd_alb" {
   name = "jenkinscicd-alb"
   subnets = ["subnet-03899ca854bdc5261", "subnet-08dd2327ec620088b"] # Replace with your subnet IDs
   security_groups = ["sg-008bb6cdd38c35d75"] # Replace with your security group IDs
-  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_alb_target_group" "jenkinscicd_target_group" {
