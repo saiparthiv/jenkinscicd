@@ -91,21 +91,6 @@ pipeline {
   }
   post {
         always {
-            // Run the Docker image cleanup script
-            sh '''
-                #!/bin/bash
-
-                # Get all image tags for the repository
-                tags=$(docker images | grep -v 'latest' | awk '{print $1}')
-
-                # Loop through all tags and remove the image
-                for tag in $tags; do
-                  if [[ "$tag" == "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd" ]]; then
-                    docker rmi "$tag"
-                  fi
-                done
-
-            '''
             //Send a Slack Notification
             slackSend(
                   channel: '#jenkinscicd',
