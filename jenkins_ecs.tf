@@ -57,6 +57,10 @@ resource "aws_iam_role" "ecs_execution_role" {
 EOF
 }
 
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
 resource "aws_alb" "jenkinscicd_alb" {
   name = "jenkinscicd-alb"
   subnets = ["subnet-011a25a8ff709d9fe"] # Replace with your subnet IDs
