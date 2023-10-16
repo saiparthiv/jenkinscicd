@@ -76,7 +76,7 @@ resource "aws_alb_target_group" "jenkinscicd_target_group" {
 
 resource "aws_alb_listener" "jenkinscicd_listener" {
   load_balancer_arn = aws_alb.jenkinscicd_alb.arn
-  port = 80
+  port = 85
   protocol = "HTTP"
   default_action {
     type = "forward"
@@ -108,6 +108,7 @@ resource "aws_ecs_service" "jenkinscicd_service" {
     subnets = ["subnet-03899ca854bdc5261"] # Replace with your subnet IDs
     security_groups = ["sg-0195c7c8f09395100"] # Replace with your security group IDs
   }
+  assign_public_ip = "ENABLED"
   desired_count = 1
   depends_on = [aws_ecs_cluster.jenkinscicd_cluster]
 }
@@ -132,11 +133,14 @@ resource "aws_iam_policy" "ecs_execution_policy" {
         "ecr:GetAuthorizationToken",
         "ecr:GetDownloadUrlForLayer",
         "ecr:GetRepositoryPolicy",
+        "ecr:BatchGetImage"
         "ecr:ListImages",
         "ecr:BatchCheckLayerAvailability",
         "ecr:GetLifecyclePolicy",
         "ecr:GetLifecyclePolicyPreview",
-        "ecr:PutImage"
+        "ecr:PutImage",
+        "ecr:*",
+        "ecr-public:*"
       ],
       "Effect": "Allow",
       "Resource": "*"
