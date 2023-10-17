@@ -1,3 +1,10 @@
+def COLOR_MAP = [
+    SUCCESS: 'good',      // Green color for successful builds
+    FAILURE: 'danger',    // Red color for failed builds
+    UNSTABLE: 'warning',  // Yellow color for unstable builds
+    ABORTED: 'warning',   // Yellow color for aborted builds
+]
+
 pipeline {
     agent any
     tools {
