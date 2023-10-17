@@ -133,7 +133,7 @@ resource "aws_iam_policy" "ecs_execution_policy" {
         "ecr:GetAuthorizationToken",
         "ecr:GetDownloadUrlForLayer",
         "ecr:GetRepositoryPolicy",
-        "ecr:BatchGetImage"
+        "ecr:BatchGetImage",
         "ecr:ListImages",
         "ecr:BatchCheckLayerAvailability",
         "ecr:GetLifecyclePolicy",
