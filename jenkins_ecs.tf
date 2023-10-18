@@ -3,83 +3,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Create a VPC
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-}
-
-# Define an Internet Gateway resource
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-}
-
-# Attach the Internet Gateway to the VPC
-resource "aws_internet_gateway_attachment" "main_igw_attachment" {
-  vpc_id             = aws_vpc.main.id
-  internet_gateway_id = aws_internet_gateway.main.id
-}
-
-
-# Create subnets within the VPC
-resource "aws_subnet" "subnets" {
-  for_each = {
-    "subnet_a" = {
-      cidr_block       = "10.0.1.0/24"
-      availability_zone    = "us-east-1a"
-      map_public_ip_on_launch = true
-    },
-    "subnet_b" = {
-      cidr_block       = "10.0.2.0/24"
-      availability_zone    = "us-east-1b"
-      map_public_ip_on_launch = true
-    }
-  }
-  
-  vpc_id = aws_vpc.main.id
-  cidr_block = each.value.cidr_block
-  availability_zone = each.value.availability_zone
-  map_public_ip_on_launch = each.value.map_public_ip_on_launch
-}
-
-
-# Define a security group for your ECS tasks
-resource "aws_security_group" "ecs_security_group" {
-  name_prefix = "ecs-security-group-"
-  description = "Security group for ECS tasks"
-  vpc_id      = aws_vpc.main.id
-
-  # Define inbound and outbound rules as needed
-  # For example, allow incoming traffic on port 80
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Adjust the CIDR block as needed
-  }
-
-  # You can define more rules as required.
-}
-
-# Define a route table for your subnets
-resource "aws_route_table" "subnet_route_table" {
-  vpc_id = aws_vpc.main.id
-
-  # Define routes as needed, such as a route to an internet gateway
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id  # You'll need to define an Internet Gateway resource
-  }
-}
-
-# Associate your subnets with the route table
-resource "aws_route_table_association" "subnet_route_association" {
-  for_each = aws_subnet.subnets
-  
-  subnet_id      = each.value.id
-  route_table_id = aws_route_table.subnet_route_table.id
-}
-
-
 # ECS Cluster
 resource "aws_ecs_cluster" "jenkinscicd_cluster" {
   name = "jenkinscicd-cluster"
@@ -105,8 +28,8 @@ resource "aws_ecs_task_definition" "jenkinscicd_task" {
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 80,
-          "hostPort": 80
+          "containerPort": 85,
+          "hostPort": 85
         }
       ]
     }
@@ -134,43 +57,10 @@ resource "aws_iam_role" "ecs_execution_role" {
 EOF
 }
 
-resource "aws_alb" "jenkinscicd_alb" {
-  name = "jenkinscicd-alb"
-  subnets = aws_subnet.subnets[*].id
-  security_groups = [aws_security_group.ecs_security_group.id]
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
 }
 
-
-resource "aws_alb_target_group" "jenkinscicd_target_group" {
-  name = "jenkinscicd-target-group"
-  port = 80
-  protocol = "HTTP"
-  vpc_id = aws_vpc.main.id
-}
-
-resource "aws_alb_listener" "jenkinscicd_listener" {
-  load_balancer_arn = aws_alb.jenkinscicd_alb.arn
-  port = 80
-  protocol = "HTTP"
-  default_action {
-    type = "forward"
-    target_group_arn = aws_alb_target_group.jenkinscicd_target_group.arn
-  }
-}
-
-resource "aws_alb_listener_rule" "jenkinscicd_listener_rule" {
-  listener_arn = aws_alb_listener.jenkinscicd_listener.arn
-  priority = 1
-  condition {
-    path_pattern {
-      values = ["/"]
-    }
-  }
-  action {
-    type = "forward"
-    target_group_arn = aws_alb_target_group.jenkinscicd_target_group.arn
-  }
-}
 
 # ECS Service
 resource "aws_ecs_service" "jenkinscicd_service" {
@@ -179,20 +69,20 @@ resource "aws_ecs_service" "jenkinscicd_service" {
   task_definition = aws_ecs_task_definition.jenkinscicd_task.arn
   launch_type     = "FARGATE"
   network_configuration {
-    subnets = aws_subnet.subnets[*].id
-    security_groups = [aws_security_group.ecs_security_group.id]
+    subnets = ["subnet-03899ca854bdc5261"] # Replace with your subnet IDs
+    security_groups = ["sg-0195c7c8f09395100"] # Replace with your security group IDs
     assign_public_ip = "true"
   }
   desired_count = 1
   depends_on = [aws_ecs_cluster.jenkinscicd_cluster]
 }
 
-
 # ECR Repository Data Source
 data "aws_ecr_image" "jenkinscicd_image" {
   repository_name = "jenkinscicd"
   image_tag = "latest"
 }
+
 
 # IAM Policy for ECS Execution Role
 resource "aws_iam_policy" "ecs_execution_policy" {
@@ -237,9 +127,4 @@ output "ecs_cluster_id" {
 
 output "ecs_service_name" {
   value = aws_ecs_service.jenkinscicd_service.name
-}
-
-# Output the Load Balancer URL
-output "jenkinscicd_load_balancer_url" {
-  value = aws_alb.jenkinscicd_alb.dns_name
 }
