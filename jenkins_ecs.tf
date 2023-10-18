@@ -21,19 +21,26 @@ resource "aws_internet_gateway_attachment" "main_igw_attachment" {
 
 
 # Create subnets within the VPC
-resource "aws_subnet" "subnet_a" {
-  vpc_id         = aws_vpc.main.id
-  cidr_block       = "10.0.1.0/24"
-  availability_zone    = "us-east-1a"
-  map_public_ip_on_launch = true
+resource "aws_subnet" "subnets" {
+  for_each = {
+    "subnet_a" = {
+      cidr_block       = "10.0.1.0/24"
+      availability_zone    = "us-east-1a"
+      map_public_ip_on_launch = true
+    },
+    "subnet_b" = {
+      cidr_block       = "10.0.2.0/24"
+      availability_zone    = "us-east-1b"
+      map_public_ip_on_launch = true
+    }
+  }
+  
+  vpc_id = aws_vpc.main.id
+  cidr_block = each.value.cidr_block
+  availability_zone = each.value.availability_zone
+  map_public_ip_on_launch = each.value.map_public_ip_on_launch
 }
 
-resource "aws_subnet" "subnet_b" {
-  vpc_id         = aws_vpc.main.id
-  cidr_block       = "10.0.2.0/24"
-  availability_zone    = "us-east-1b"
-  map_public_ip_on_launch = true
-}
 
 # Define a security group for your ECS tasks
 resource "aws_security_group" "ecs_security_group" {
@@ -66,10 +73,12 @@ resource "aws_route_table" "subnet_route_table" {
 
 # Associate your subnets with the route table
 resource "aws_route_table_association" "subnet_route_association" {
-  count          = length(aws_subnet.subnet_a)
-  subnet_id      = aws_subnet.subnet_a[count.index].id
+  for_each = aws_subnet.subnets
+  
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.subnet_route_table.id
 }
+
 
 # ECS Cluster
 resource "aws_ecs_cluster" "jenkinscicd_cluster" {
