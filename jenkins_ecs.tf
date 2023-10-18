@@ -136,7 +136,7 @@ EOF
 
 resource "aws_alb" "jenkinscicd_alb" {
   name = "jenkinscicd-alb"
-  subnets = aws_subnet.subnet_a[*].id
+  subnets = aws_subnet.subnet_a[*].id, aws_subnet["subnet_b"].id]
   security_groups = [aws_security_group.ecs_security_group.id]  # Use the security group created earlier
 }
 
@@ -178,7 +178,7 @@ resource "aws_ecs_service" "jenkinscicd_service" {
   task_definition = aws_ecs_task_definition.jenkinscicd_task.arn
   launch_type     = "FARGATE"
   network_configuration {
-    subnets = aws_subnet.subnet_a[*].id
+    subnets = [aws_subnet["subnet_a"].id, aws_subnet["subnet_b"].id]
     security_groups = [aws_security_group.ecs_security_group.id]  # Use the security group created earlier
     assign_public_ip = "true"
   }
