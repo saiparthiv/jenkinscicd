@@ -102,15 +102,39 @@ pipeline {
             sh '''
                 #!/bin/bash
 
-                # Get all image tags for the repository
-                tags=$(docker images | grep -v 'latest' | awk '{print $1}')
+                # Define the repository URL
+                REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
 
-                # Loop through all tags and remove the image
-                for tag in $tags; do
-                  if [[ "$tag" == "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd" ]]; then
-                    docker rmi "$tag"
+                # Get a list of all images from the repository
+                ALL_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "^$REPO_URL")
+
+                # Identify the "latest" image
+                LATEST_IMAGE_ID=""
+                for IMAGE in $ALL_IMAGES; do
+                  IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
+                  IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
+
+                  if [ "$IMAGE_TAG" == "latest" ]; then
+                    LATEST_IMAGE_ID=$(docker inspect -f '{{.Id}}' "$IMAGE_NAME:$IMAGE_TAG")
+                    break
                   fi
                 done
+
+                # Iterate over each image
+                for IMAGE in $ALL_IMAGES; do
+                  IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
+                  IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
+
+                  # Check if the tag is not "latest" and the image ID is different from the "latest" image ID
+                  IMAGE_ID=$(docker inspect -f '{{.Id}}' "$IMAGE_NAME:$IMAGE_TAG")
+                  if [ "$IMAGE_TAG" != "latest" ] && [ "$IMAGE_ID" != "$LATEST_IMAGE_ID" ]; then
+                    echo "Removing image: $IMAGE"
+                    docker rmi "$IMAGE_NAME:$IMAGE_TAG"
+                  fi
+                done
+
+                echo "Cleanup completed."
+
 
             '''
             //Send a Slack Notification
