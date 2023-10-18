@@ -28,8 +28,8 @@ resource "aws_ecs_task_definition" "jenkinscicd_task" {
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 85,
-          "hostPort": 85
+          "containerPort": 80,
+          "hostPort": 80
         }
       ]
     }
@@ -69,14 +69,14 @@ resource "aws_alb" "jenkinscicd_alb" {
 
 resource "aws_alb_target_group" "jenkinscicd_target_group" {
   name = "jenkinscicd-target-group"
-  port = 85
+  port = 80
   protocol = "HTTP"
   vpc_id = aws_vpc.main.id
 }
 
 resource "aws_alb_listener" "jenkinscicd_listener" {
   load_balancer_arn = aws_alb.jenkinscicd_alb.arn
-  port = 85
+  port = 80
   protocol = "HTTP"
   default_action {
     type = "forward"
