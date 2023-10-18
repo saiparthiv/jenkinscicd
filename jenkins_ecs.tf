@@ -137,11 +137,12 @@ EOF
 resource "aws_alb" "jenkinscicd_alb" {
   name = "jenkinscicd-alb"
   subnets = [
-     aws_subnet.subnet_a[*].id, 
-     aws_subnet["subnet_b"].id
- ]
-  security_groups = [aws_security_group.ecs_security_group.id]  # Use the security group created earlier
+    aws_subnet["subnet_a"].id,
+    aws_subnet["subnet_b"].id
+  ]
+  security_groups = [aws_security_group.ecs_security_group.id]
 }
+
 
 resource "aws_alb_target_group" "jenkinscicd_target_group" {
   name = "jenkinscicd-target-group"
