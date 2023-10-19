@@ -10,7 +10,7 @@ pipeline {
     tools {
       maven "MAVEN3"
       jdk "OracleJDK17"
-      ansible "YourAnsibleInstallation"
+      ansible "ansible"
   }
 
     environment {
