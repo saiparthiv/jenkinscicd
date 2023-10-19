@@ -26,6 +26,29 @@ pipeline {
       }
     }
 
+    stage('Print User') {
+            steps {
+                sh 'whoami'
+            }
+        }
+
+
+        stage('Run Ansible Playbook') {
+        steps {
+            script {
+                sh "ansible-galaxy collection install datadog.dd"
+                def playbookPath = "${WORKSPACE}/install_datadog.yml"
+                
+                // Run the Ansible playbook
+                def ansibleCommand = "ansible-playbook ${playbookPath} -v"
+                def ansibleStatus = sh(script: ansibleCommand, returnStatus: true)
+
+                if (ansibleStatus != 0) {
+                    error("Ansible playbook execution failed with status ${ansibleStatus}")
+                }
+            }
+        }
+    }
 
     stage('SonarQube Analysis') {
       steps {
@@ -92,24 +115,6 @@ pipeline {
           }
         }
       }
-    }
-
-
-    stage('Run Ansible Playbook') {
-        steps {
-            script {
-                sh "ansible-galaxy collection install datadog.dd"
-                def playbookPath = "${WORKSPACE}/install_datadog.yml"
-                
-                // Run the Ansible playbook
-                def ansibleCommand = "ansible-playbook ${playbookPath} -v"
-                def ansibleStatus = sh(script: ansibleCommand, returnStatus: true)
-
-                if (ansibleStatus != 0) {
-                    error("Ansible playbook execution failed with status ${ansibleStatus}")
-                }
-            }
-        }
     }
 
 
