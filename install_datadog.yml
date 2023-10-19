@@ -3,6 +3,7 @@
   hosts: localhost
   connection: local
   become: yes
+  become_user: root
 
   tasks:
     - name: Import the Datadog Agent role from the Datadog collection
