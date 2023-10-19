@@ -124,9 +124,6 @@ pipeline {
             done
 
             echo "Cleanup completed."
-
-
-
             '''
 
             echo 'Slack Notifications.'

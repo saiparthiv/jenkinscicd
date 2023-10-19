@@ -10,6 +10,7 @@ pipeline {
     tools {
       maven "MAVEN3"
       jdk "OracleJDK17"
+      ansible "YourAnsibleInstallation"
   }
 
     environment {
@@ -92,6 +93,25 @@ pipeline {
         }
       }
     }
+
+
+    stage('Run Ansible Playbook') {
+        steps {
+            script {
+                sh "ansible-galaxy collection install datadog.dd"
+                def playbookPath = "${WORKSPACE}/playbook.yml"
+                
+                // Run the Ansible playbook
+                def ansibleCommand = "ansible-playbook ${playbookPath} -v"
+                def ansibleStatus = sh(script: ansibleCommand, returnStatus: true)
+
+                if (ansibleStatus != 0) {
+                    error("Ansible playbook execution failed with status ${ansibleStatus}")
+                }
+            }
+        }
+    }
+
 
 
 
