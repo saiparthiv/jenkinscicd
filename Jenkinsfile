@@ -99,7 +99,7 @@ pipeline {
         steps {
             script {
                 sh "ansible-galaxy collection install datadog.dd"
-                def playbookPath = "${WORKSPACE}/playbook.yml"
+                def playbookPath = "${WORKSPACE}/install_datadog.yml"
                 
                 // Run the Ansible playbook
                 def ansibleCommand = "ansible-playbook ${playbookPath} -v"
