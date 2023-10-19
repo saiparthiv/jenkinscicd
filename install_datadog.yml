@@ -2,9 +2,6 @@
 - name: Using Ansible to install Datadog Agent on EC2
   hosts: localhost
   connection: local
-  gather_facts: True
-  become: yes
-  become_user: ubuntu
 
   tasks:
     - name: Import the Datadog Agent role from the Datadog collection
