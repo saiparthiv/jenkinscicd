@@ -31,7 +31,7 @@ pipeline {
                             branches: [[name: '*/main']],
                             userRemoteConfigs: [[
                                 url: 'https://github.com/saiparthiv/jenkinscicd.git',
-                                credentialsId: 'your-credential-id' // Use the same credentials ID as in 'withCredentials'
+                                credentialsId: 'github' // Use the same credentials ID as in 'withCredentials'
                             ]]
                         ])
                     }
