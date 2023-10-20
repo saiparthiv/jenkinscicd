@@ -21,7 +21,7 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
+    stage('Fetch Code') {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'githublogin', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
@@ -39,22 +39,6 @@ pipeline {
             }
         }
 
-    stage('Run Ansible Playbook') {
-        steps {
-            script {
-                sh "ansible-galaxy collection install datadog.dd"
-                def playbookPath = "${WORKSPACE}/install_datadog.yml"
-                
-                // Run the Ansible playbook
-                def ansibleCommand = "ansible-playbook ${playbookPath} -v"
-                def ansibleStatus = sh(script: ansibleCommand, returnStatus: true)
-
-                if (ansibleStatus != 0) {
-                    error("Ansible playbook execution failed with status ${ansibleStatus}")
-                }
-            }
-        }
-    }
 
     stage('SonarQube Analysis') {
       steps {
@@ -99,7 +83,7 @@ pipeline {
     }
 
 
-    stage('Deploy to ECS with Terraform') {
+    stage('Deploy ECS with Terraform') {
       steps {
         script {
           // Set the AWS credentials and region for Terraform
@@ -124,50 +108,30 @@ pipeline {
     }
 
 
+    stage('Run Ansible Playbook to install Datadog') {
+        steps {
+            script {
+                sh "ansible-galaxy collection install datadog.dd"
+                def playbookPath = "${WORKSPACE}/install_datadog.yml"
+                
+                // Run the Ansible playbook
+                def ansibleCommand = "ansible-playbook ${playbookPath} -v"
+                def ansibleStatus = sh(script: ansibleCommand, returnStatus: true)
+
+                if (ansibleStatus != 0) {
+                    error("Ansible playbook execution failed with status ${ansibleStatus}")
+                }
+            }
+        }
+    }
+
+
 
 
   }
   post {
         always {
-            // Run the Docker image cleanup script
-            sh '''
-                #!/bin/bash
 
-                # Define the repository URL
-                REPO_URL="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
-
-                # Get a list of all images from the repository
-                ALL_IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep "^$REPO_URL")
-
-                # Identify the "latest" image
-                LATEST_IMAGE_ID=""
-                for IMAGE in $ALL_IMAGES; do
-                  IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
-                  IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
-
-                  if [ "$IMAGE_TAG" == "latest" ]; then
-                    LATEST_IMAGE_ID=$(docker inspect -f '{{.Id}}' "$IMAGE_NAME:$IMAGE_TAG")
-                    break
-                  fi
-                done
-
-                # Iterate over each image
-                for IMAGE in $ALL_IMAGES; do
-                  IMAGE_NAME=$(echo "$IMAGE" | cut -d: -f1)
-                  IMAGE_TAG=$(echo "$IMAGE" | cut -d: -f2)
-
-                  # Check if the tag is not "latest" and the image ID is different from the "latest" image ID
-                  IMAGE_ID=$(docker inspect -f '{{.Id}}' "$IMAGE_NAME:$IMAGE_TAG")
-                  if [ "$IMAGE_TAG" != "latest" ] && [ "$IMAGE_ID" != "$LATEST_IMAGE_ID" ]; then
-                    echo "Removing image: $IMAGE"
-                    docker rmi "$IMAGE_NAME:$IMAGE_TAG"
-                  fi
-                done
-
-                echo "Cleanup completed."
-
-
-            '''
             //Send a Slack Notification
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
