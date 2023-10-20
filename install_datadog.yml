@@ -2,7 +2,7 @@
 - name: Using Ansible to install Datadog Agent on EC2
   hosts: localhost
   connection: local
-  become: yes
+  become: true
   become_user: root
 
   tasks:
