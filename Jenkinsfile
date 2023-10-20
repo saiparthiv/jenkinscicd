@@ -27,6 +27,24 @@ pipeline {
     }
 
 
+    stage('Checkout') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github', variable: 'GIT_CREDENTIAL')]) {
+                        // Use the GIT_CREDENTIAL variable for Git authentication
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: '*/main']],
+                            userRemoteConfigs: [[
+                                url: 'https://github.com/saiparthiv/jenkinscicd.git',
+                                credentialsId: 'github' // Use the same credentials ID as in 'withCredentials'
+                            ]]
+                        ])
+                    }
+                }
+            }
+        }
+
     stage('Run Ansible Playbook') {
         steps {
             script {
