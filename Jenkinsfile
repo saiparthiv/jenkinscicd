@@ -26,12 +26,6 @@ pipeline {
       }
     }
 
-    stage('Print User') {
-            steps {
-                sh 'whoami'
-            }
-        }
-
 
     stage('Run Ansible Playbook') {
         steps {
