@@ -19,13 +19,6 @@ pipeline {
         jenkinscicdRegistry = "https://805619463928.dkr.ecr.us-east-1.amazonaws.com"
     }
 
-  stages {
-    stage('Fetch Code'){
-      steps {
-        git branch: 'main', url: 'https://github.com/saiparthiv/jenkinscicd.git'
-      }
-    }
-
 
     stage('Checkout') {
             steps {
