@@ -19,6 +19,7 @@ pipeline {
         jenkinscicdRegistry = "https://805619463928.dkr.ecr.us-east-1.amazonaws.com"
     }
 
+  stages {
 
     stage('Checkout') {
             steps {
@@ -30,7 +31,7 @@ pipeline {
                             branches: [[name: '*/main']],
                             userRemoteConfigs: [[
                                 url: 'https://github.com/saiparthiv/jenkinscicd.git',
-                                credentialsId: 'github' // Use the same credentials ID as in 'withCredentials'
+                                credentialsId: 'your-credential-id' // Use the same credentials ID as in 'withCredentials'
                             ]]
                         ])
                     }
