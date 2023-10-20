@@ -33,7 +33,7 @@ pipeline {
         }
 
 
-        stage('Run Ansible Playbook') {
+    stage('Run Ansible Playbook') {
         steps {
             script {
                 sh "ansible-galaxy collection install datadog.dd"
