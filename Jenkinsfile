@@ -131,7 +131,27 @@ pipeline {
   }
   post {
         always {
+             
+            sh '''
+            #!/bin/bash
 
+            # Define the image name
+            image_name="805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
+
+            # Check if the image exists
+            if docker images | awk '{print $1}' | grep -q "^$image_name$"; then
+                # Remove the image
+                docker rmi $image_name
+                if [ $? -eq 0 ]; then
+                    echo "Image $image_name removed successfully."
+                else
+                    echo "Failed to remove image $image_name."
+                    exit 1
+                fi
+            else
+                echo "Image $image_name not found on the host machine."
+            fi
+            '''
             //Send a Slack Notification
             echo 'Slack Notifications.'
             slackSend channel: '#jenkinscicd',
