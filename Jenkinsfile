@@ -5,9 +5,6 @@ def COLOR_MAP = [
     ABORTED: 'warning',   // Yellow color for aborted builds
 ]
 
-@Library('jenkins_nexus') _
-
-
 pipeline {
     agent any
     tools {
