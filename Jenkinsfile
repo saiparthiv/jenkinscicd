@@ -66,25 +66,33 @@ pipeline {
     stage('Push Images to Nexus') {
      steps {
         script {
-            def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
-            def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
-
             //def dockerImageTag = "${appRegistry}:${BUILD_NUMBER}"
             //def nexusArtifactId = "${JOB_NAME}-${BUILD_NUMBER}"
 
             // Push the Docker image to Nexus
-            nexusArtifactUploader(
-                nexusVersion: 'nexus3', // Use 'nexus2' if you are using Nexus 2.x
-                protocol: 'docker',
-                nexusUrl: 'http://18.207.144.208:8081', // Replace with your Nexus server URL
-                repository: nexusRepository,
-                credentialsId: nexusCredentialsId,
+
                 //dockerImageTag: dockerImageTag,
                 //nexusArtifactId: nexusArtifactId
-            )
+            nexusArtifactUploader(
+                nexusVersion: 'nexus3',
+                protocol: 'docker',
+                nexusUrl: 'http://18.207.144.208:8081',
+                groupId: 'com.example',
+                version: version,
+                repository: 'jenkins_nexus_repo',
+                credentialsId: 'nexus',
+                artifacts: [
+                    [artifactId: projectName,
+                     classifier: '',
+                     file: 'my-service-' + version + '.jar',
+                     type: 'jar']
+                ]
+             )
           }
        }
     }
+
+
 
 
 
