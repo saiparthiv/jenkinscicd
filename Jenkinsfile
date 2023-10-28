@@ -71,8 +71,9 @@ pipeline {
                 def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
                 def dockerImageTag = "latest" // You can change this to the tag you want to publish
 
-                withCredentials([usernamePassword(credentialsId: nexusCredentialsId, usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'ecr-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh """
+                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $appRegistry
                         docker pull $appRegistry:$dockerImageTag
                         docker tag $appRegistry:$dockerImageTag $nexusUrl/$nexusRepository:$dockerImageTag
                         docker login -u \$NEXUS_USERNAME -p \$NEXUS_PASSWORD $nexusUrl
