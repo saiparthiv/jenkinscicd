@@ -5,9 +5,6 @@ def COLOR_MAP = [
     ABORTED: 'warning',   // Yellow color for aborted builds
 ]
 
-@Library('jenkins_nexus') _
-
-
 pipeline {
     agent any
     tools {
@@ -86,29 +83,48 @@ pipeline {
     }
 
 
-    stage('Push Images to Nexus') {
-    steps {
+    stage('Deploy ECS with Terraform') {
+      steps {
         script {
-            def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
-            def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
+          // Set the AWS credentials and region for Terraform
+          withAWS(credentials: 'awscreds', region: 'us-east-1') {
+            // Define the path to your Terraform script
+            def terraformScriptPath = "${WORKSPACE}"
 
-            def dockerImageTag = "${appRegistry}:${BUILD_NUMBER}"
-            def nexusArtifactId = "${JOB_NAME}-${BUILD_NUMBER}"
+            // Initialize and apply the Terraform configuration
+            sh "cd ${terraformScriptPath} && terraform init"
+            sh "cd ${terraformScriptPath} && terraform apply -auto-approve"
 
-            // Push the Docker image to Nexus
-            nexusArtifactUploader(
-                nexusVersion: 'nexus3', // Use 'nexus2' if you are using Nexus 2.x
-                protocol: 'docker',
-                server: 'nexus', // Replace with your Nexus server URL
-                groupId: 'com.example', // Replace with your Nexus group ID
-                repository: nexusRepository,
-                credentialsId: nexusCredentialsId,
-                dockerImageTag: dockerImageTag,
-                nexusArtifactId: nexusArtifactId
-            )
+            // Optionally, capture and save the Terraform outputs for reference
+            def ecsClusterId = sh(script: "cd ${terraformScriptPath} && terraform output ecs_cluster_id", returnStatus: true)
+            def ecsServiceName = sh(script: "cd ${terraformScriptPath} && terraform output ecs_service_name", returnStatus: true)
+
+            // Print the ECS cluster and service details
+            echo "ECS Cluster ID: ${ecsClusterId}"
+            echo "ECS Service Name: ${ecsServiceName}"
           }
-       }
+        }
+      }
     }
+
+
+    stage('Run Ansible Playbook to install Datadog') {
+        steps {
+            script {
+                sh "ansible-galaxy collection install datadog.dd"
+                def playbookPath = "${WORKSPACE}/install_datadog.yml"
+                
+                // Run the Ansible playbook
+                def ansibleCommand = "ansible-playbook ${playbookPath} -v"
+                def ansibleStatus = sh(script: ansibleCommand, returnStatus: true)
+
+                if (ansibleStatus != 0) {
+                    error("Ansible playbook execution failed with status ${ansibleStatus}")
+                }
+            }
+        }
+    }
+
 
 
 
