@@ -40,26 +40,6 @@ pipeline {
         }
 
 
-    stage('SonarQube Analysis') {
-      steps {
-        script {
-            def scannerHome = tool name: 'SonarQubeScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-            def projectKey = 'jenkinscicd'
-            def projectVersion = '1.0'
-            
-            withSonarQubeEnv('sonar') {
-                sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectName='jenkinscicd' \
-                        -Dsonar.projectKey='jenkinscicd' \
-                        -Dsonar.projectVersion='1.0' \
-                   """
-            }
-        }
-      }
-    }
-
-
     stage('Build Image using Docker') {
        steps {
        
@@ -86,26 +66,20 @@ pipeline {
     stage('Push Images to Nexus') {
      steps {
         script {
-            def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
-            def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
+            def nexusRepository = 'jenkins_nexus_repo' // Replace with your Docker repository name in Nexus
+            def nexusCredentialsId = 'nexus' // Replace with your Nexus Docker credentials ID
 
-            def dockerImageTag = "${appRegistry}:${BUILD_NUMBER}"
-            def nexusArtifactId = "${JOB_NAME}-${BUILD_NUMBER}"
-
-            // Push the Docker image to Nexus
             nexusArtifactUploader(
-                nexusVersion: 'nexus3', // Use 'nexus2' if you are using Nexus 2.x
-                protocol: 'docker',
-                server: 'http://18.207.144.208:8081', // Replace with your Nexus server URL
-                groupId: 'com.example', // Replace with your Nexus group ID
+                nexusServerId: 'sona_nexus', // Replace with your Nexus server ID
+                version: "${BUILD_NUMBER}",
                 repository: nexusRepository,
                 credentialsId: nexusCredentialsId,
-                dockerImageTag: dockerImageTag,
-                nexusArtifactId: nexusArtifactId
+                asset: dockerImageTag,
+                format: 'docker'
             )
-          }
-       }
-    }
+         }
+      }
+   }
 
 
 
