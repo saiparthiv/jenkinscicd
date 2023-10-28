@@ -79,8 +79,8 @@ pipeline {
                 nexusUrl: 'http://18.207.144.208:8081', // Replace with your Nexus server URL
                 repository: nexusRepository,
                 credentialsId: nexusCredentialsId,
-                dockerImageTag: dockerImageTag,
-                nexusArtifactId: nexusArtifactId
+                //dockerImageTag: dockerImageTag,
+                //nexusArtifactId: nexusArtifactId
             )
           }
        }
