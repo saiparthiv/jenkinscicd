@@ -63,33 +63,24 @@ pipeline {
     }
 
 
-    stage('Push Images to Nexus') {
-     steps {
-        script {
-            //def dockerImageTag = "${appRegistry}:${BUILD_NUMBER}"
-            //def nexusArtifactId = "${JOB_NAME}-${BUILD_NUMBER}"
+    stage('Publish Image to Nexus') {
+        steps {
+            script {
+                def nexusUrl = 'http://18.207.144.208:8081/repository/jenkins_nexus_repo/' // Replace with your Nexus URL
+                def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
+                def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
+                def dockerImageTag = "latest" // You can change this to the tag you want to publish
 
-            // Push the Docker image to Nexus
-
-                //dockerImageTag: dockerImageTag,
-                //nexusArtifactId: nexusArtifactId
-            nexusArtifactUploader(
-                nexusVersion: 'nexus3',
-                protocol: 'docker',
-                nexusUrl: 'http://18.207.144.208:8081',
-                groupId: 'com.example',
-                version: version,
-                repository: 'jenkins_nexus_repo',
-                credentialsId: 'nexus',
-                artifacts: [
-                    [artifactId: projectName,
-                     classifier: '',
-                     file: 'my-service-' + version + '.jar',
-                     type: 'jar']
-                ]
-             )
-          }
-       }
+                withCredentials([usernamePassword(credentialsId: nexusCredentialsId, usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sh """
+                        docker pull $appRegistry:$dockerImageTag
+                        docker tag $appRegistry:$dockerImageTag $nexusUrl/$nexusRepository:$dockerImageTag
+                        docker login -u \$NEXUS_USERNAME -p \$NEXUS_PASSWORD $nexusUrl
+                        docker push $nexusUrl/$nexusRepository:$dockerImageTag
+                    """
+                }
+            }
+        }
     }
 
 
