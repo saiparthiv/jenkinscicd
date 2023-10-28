@@ -76,7 +76,7 @@ pipeline {
             nexusArtifactUploader(
                 nexusVersion: 'nexus3', // Use 'nexus2' if you are using Nexus 2.x
                 protocol: 'docker',
-                server: 'http://18.207.144.208:8081', // Replace with your Nexus server URL
+                nexusUrl: 'http://18.207.144.208:8081', // Replace with your Nexus server URL
                 repository: nexusRepository,
                 credentialsId: nexusCredentialsId,
                 dockerImageTag: dockerImageTag,
