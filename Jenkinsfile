@@ -66,7 +66,7 @@ pipeline {
     stage('Publish Image to Nexus') {
         steps {
             script {
-                def nexusUrl = 'http://18.207.144.208:8081/repository/jenkins_nexus_repo' // Replace with your Nexus URL
+                def nexusUrl = 'http://18.207.144.208:8081/repository' // Replace with your Nexus URL
                 def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
                 def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
                 def dockerImageTag = "latest" // You can change this to the tag you want to publish
@@ -75,7 +75,7 @@ pipeline {
                     sh """
                         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $appRegistry
                         docker pull $appRegistry:$dockerImageTag
-                        docker tag $appRegistry:$dockerImageTag $nexusUrl$nexusRepository:$dockerImageTag
+                        docker tag $appRegistry:$dockerImageTag $nexusUrl/$nexusRepository:$dockerImageTag
                         docker login -u \$NEXUS_USERNAME -p \$NEXUS_PASSWORD $nexusUrl
                         docker push $nexusUrl/$nexusRepository:$dockerImageTag
                     """
