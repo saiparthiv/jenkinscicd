@@ -69,8 +69,8 @@ pipeline {
             def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
             def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
 
-            def dockerImageTag = "${appRegistry}:${BUILD_NUMBER}"
-            def nexusArtifactId = "${JOB_NAME}-${BUILD_NUMBER}"
+            //def dockerImageTag = "${appRegistry}:${BUILD_NUMBER}"
+            //def nexusArtifactId = "${JOB_NAME}-${BUILD_NUMBER}"
 
             // Push the Docker image to Nexus
             nexusArtifactUploader(
