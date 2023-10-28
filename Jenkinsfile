@@ -17,6 +17,7 @@ pipeline {
         registryCredential = 'ecr:us-east-1:awscreds'
         appRegistry = "805619463928.dkr.ecr.us-east-1.amazonaws.com/jenkinscicd"
         jenkinscicdRegistry = "https://805619463928.dkr.ecr.us-east-1.amazonaws.com"
+        nexusRepository = "http://18.207.144.208:8081/repository/jenkins_nexus_repo/"
     }
 
   stages {
@@ -63,26 +64,26 @@ pipeline {
     }
 
 
-    stage('Publish Image to Nexus') {
-        steps {
-            script {
-                def nexusUrl = 'http://18.207.144.208:8081/repository/jenkins_nexus_repo/' // Replace with your Nexus URL
-                def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
-                def dockerImageTag = "latest" // You can change this to the tag you want to publish
+    stage('Push Image to Nexus') {
+      steps {
+        script {
+          // Get the Nexus credentials
+          nexusCredential = credentials('nexus')
 
-                withCredentials([usernamePassword(credentialsId: 'aws_userpass', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh """
-                        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $appRegistry
-                        docker pull $appRegistry:$dockerImageTag
-                        docker tag $appRegistry:$dockerImageTag $nexusUrl$appRegistry:$dockerImageTag
-                        docker login -u \$NEXUS_USERNAME -p \$NEXUS_PASSWORD $nexusUrl
-                        docker push $nexusUrl$appRegistry:$dockerImageTag
-                    """
-                }
-            }
+          // Get the ECR image name
+          ecrImageName = "${env.appRegistry}:${env.BUILD_NUMBER}"
+
+          // Login to Nexus
+          nexus.login(nexusCredential)
+
+          // Upload the ECR image to Nexus
+          nexus.upload("${env.nexusRepository}", ecrImageName)
+
+          // Logout of Nexus
+          nexus.logout()
         }
+      }
     }
-
 
 
 
