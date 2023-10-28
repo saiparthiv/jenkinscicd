@@ -84,7 +84,7 @@ pipeline {
 
 
     stage('Push Images to Nexus') {
-    steps {
+     steps {
         script {
             def nexusRepository = 'jenkins_nexus_repo' // Replace with your Nexus repository name
             def nexusCredentialsId = 'nexus' // Replace with your Nexus credentials ID
@@ -96,7 +96,7 @@ pipeline {
             nexusArtifactUploader(
                 nexusVersion: 'nexus3', // Use 'nexus2' if you are using Nexus 2.x
                 protocol: 'docker',
-                server: 'nexus', // Replace with your Nexus server URL
+                server: 'http://18.207.144.208:8081', // Replace with your Nexus server URL
                 groupId: 'com.example', // Replace with your Nexus group ID
                 repository: nexusRepository,
                 credentialsId: nexusCredentialsId,
